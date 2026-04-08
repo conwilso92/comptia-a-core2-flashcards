@@ -1,6 +1,6 @@
 CompTIA A+ Core 2 (220-1202) Flashcard Study App
 
-A browser-based flashcard app designed for studying the CompTIA A+ Core 2 certification exam. 141 cards covering all 4 exam domains: Operating Systems, Security, Operational Procedures, and Software Troubleshooting.
+A browser-based flashcard app designed for studying the CompTIA A+ Core 2 certification exam. 144 cards covering all 4 exam domains: Operating Systems, Security, Operational Procedures, and Software Troubleshooting.
 How to use:
 
 Tap a card to reveal the answer
