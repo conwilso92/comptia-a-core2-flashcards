@@ -11,3 +11,5 @@ A browser-based flashcard app designed for studying the CompTIA A+ Core 2 certif
 - Shuffle to randomize the order
 
 All acronyms include the full name underneath the answer. No login required — works on any device with a browser.
+
+[Use the app](https://conwilso92.github.io/comptia-a-core2-flashcards)
