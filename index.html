@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CompTIA A+ Core 2 Flashcards</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
+  .app { max-width: 700px; margin: 0 auto; padding: 20px; }
+  h1 { font-size: 1.4rem; text-align: center; margin-bottom: 4px; color: #f1f5f9; }
+  .subtitle { text-align: center; color: #64748b; font-size: 0.85rem; margin-bottom: 24px; }
+  .cat-bar { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 20px; }
+  .cat-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid #334155; background: transparent; color: #94a3b8; font-size: 0.78rem; cursor: pointer; transition: all 0.2s; }
+  .cat-btn:hover { border-color: #60a5fa; color: #60a5fa; }
+  .cat-btn.active { background: #1e3a5f; border-color: #3b82f6; color: #93c5fd; }
+  .progress-wrap { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .progress-bar { flex: 1; height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-radius: 3px; transition: width 0.4s; }
+  .progress-text { font-size: 0.8rem; color: #64748b; white-space: nowrap; }
+  .card-container { perspective: 1000px; margin-bottom: 20px; }
+  .card { position: relative; width: 100%; min-height: 220px; cursor: pointer; transition: transform 0.5s; transform-style: preserve-3d; }
+  .card.flipped { transform: rotateY(180deg); }
+  .card-face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 16px; padding: 32px 28px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+  .card-front { background: linear-gradient(145deg, #1e293b, #162032); border: 1px solid #334155; }
+  .card-back { background: linear-gradient(145deg, #1a2744, #152238); border: 1px solid #2d4a6f; transform: rotateY(180deg); }
+  .card-cat { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: #60a5fa; margin-bottom: 16px; font-weight: 600; }
+  .card-question { font-size: 1.15rem; line-height: 1.5; color: #f1f5f9; }
+  .card-answer { font-size: 1.2rem; line-height: 1.6; color: #a5f3fc; font-weight: 600; }
+  .card-answer .acr-full { display: block; font-size: 0.85rem; color: #7dd3fc; font-weight: 400; margin-top: 6px; }
+  .card-hint { font-size: 0.75rem; color: #475569; margin-top: 20px; }
+  .conf-row { display: flex; gap: 10px; margin-bottom: 20px; }
+  .conf-btn { flex: 1; padding: 12px; border-radius: 10px; border: none; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .conf-btn:hover { transform: translateY(-1px); }
+  .conf-miss { background: #7f1d1d; color: #fca5a5; }
+  .conf-miss:hover { background: #991b1b; }
+  .conf-shaky { background: #78350f; color: #fcd34d; }
+  .conf-shaky:hover { background: #92400e; }
+  .conf-got { background: #14532d; color: #86efac; }
+  .conf-got:hover { background: #166534; }
+  .nav-row { display: flex; justify-content: space-between; align-items: center; }
+  .nav-btn { padding: 10px 22px; border-radius: 10px; border: 1px solid #334155; background: #1e293b; color: #94a3b8; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+  .nav-btn:hover { background: #334155; color: #e2e8f0; }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .shuffle-btn { padding: 10px 22px; border-radius: 10px; border: 1px solid #334155; background: transparent; color: #94a3b8; cursor: pointer; font-size: 0.85rem; }
+  .shuffle-btn:hover { border-color: #8b5cf6; color: #a78bfa; }
+  .stats { display: flex; justify-content: center; gap: 24px; margin-top: 24px; padding: 16px; background: #1e293b; border-radius: 12px; }
+  .stat { text-align: center; }
+  .stat-num { font-size: 1.3rem; font-weight: 700; }
+  .stat-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+  .stat-miss .stat-num { color: #f87171; }
+  .stat-shaky .stat-num { color: #fbbf24; }
+  .stat-got .stat-num { color: #4ade80; }
+  .stat-unseen .stat-num { color: #64748b; }
+  .filter-mode { text-align: center; font-size: 0.78rem; color: #64748b; margin-bottom: 6px; }
+  .empty-state { text-align: center; padding: 60px 20px; color: #64748b; }
+  .empty-state p { margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+const CARDS = [
+  // ========== WINDOWS COMMANDS (35) ==========
+  { cat: "Windows Commands", q: "What command scans and repairs corrupted Windows system files?", a: "sfc /scannow<span class='acr-full'>(System File Checker)</span>" },
+  { cat: "Windows Commands", q: "What command repairs the Windows image when sfc fails?", a: "DISM /Online /Cleanup-Image /RestoreHealth<span class='acr-full'>(Deployment Image Servicing & Management)</span>" },
+  { cat: "Windows Commands", q: "What command checks a disk for errors and bad sectors?", a: "chkdsk<span class='acr-full'>(Check Disk)</span>" },
+  { cat: "Windows Commands", q: "What command forces a Group Policy refresh?", a: "gpupdate /force" },
+  { cat: "Windows Commands", q: "What command shows which Group Policies are applied?", a: "gpresult" },
+  { cat: "Windows Commands", q: "What command displays current IP, subnet, and gateway?", a: "ipconfig<span class='acr-full'>(IP Configuration)</span>" },
+  { cat: "Windows Commands", q: "What command shows full network config including DNS and DHCP?", a: "ipconfig /all<span class='acr-full'>(IP Configuration)</span>" },
+  { cat: "Windows Commands", q: "What command releases the current DHCP IP address?", a: "ipconfig /release" },
+  { cat: "Windows Commands", q: "What command requests a new IP from the DHCP server?", a: "ipconfig /renew" },
+  { cat: "Windows Commands", q: "What command clears the local DNS cache?", a: "ipconfig /flushdns<span class='acr-full'>(Domain Name System)</span>" },
+  { cat: "Windows Commands", q: "What command maps a network drive to a shared folder?", a: "net use" },
+  { cat: "Windows Commands", q: "What command manages local user accounts?", a: "net user" },
+  { cat: "Windows Commands", q: "What command shows active connections and listening ports?", a: "netstat<span class='acr-full'>(Network Statistics)</span>" },
+  { cat: "Windows Commands", q: "What command resolves a domain name to an IP address?", a: "nslookup<span class='acr-full'>(Name Server Lookup)</span>" },
+  { cat: "Windows Commands", q: "What command traces the path to a host showing each hop?", a: "tracert<span class='acr-full'>(Trace Route)</span>" },
+  { cat: "Windows Commands", q: "What command is like tracert but also shows packet loss per hop?", a: "pathping" },
+  { cat: "Windows Commands", q: "What command tests connectivity by sending ICMP packets?", a: "ping<span class='acr-full'>(ICMP = Internet Control Message Protocol)</span>" },
+  { cat: "Windows Commands", q: "What command shuts down or restarts a PC from the CLI?", a: "shutdown (/s = off, /r = restart)" },
+  { cat: "Windows Commands", q: "What command opens System Configuration (boot options, services)?", a: "msconfig<span class='acr-full'>(Microsoft System Configuration)</span>" },
+  { cat: "Windows Commands", q: "What command opens the Registry Editor?", a: "regedit<span class='acr-full'>(Registry Editor)</span>" },
+  { cat: "Windows Commands", q: "What command opens Device Manager?", a: "devmgmt.msc<span class='acr-full'>(Device Management - Microsoft Console)</span>" },
+  { cat: "Windows Commands", q: "What command opens Disk Management?", a: "diskmgmt.msc<span class='acr-full'>(Disk Management - Microsoft Console)</span>" },
+  { cat: "Windows Commands", q: "What command opens the Local Group Policy Editor?", a: "gpedit.msc<span class='acr-full'>(Group Policy Edit - Microsoft Console)</span>" },
+  { cat: "Windows Commands", q: "What command opens Event Viewer?", a: "eventvwr.msc<span class='acr-full'>(Event Viewer - Microsoft Console)</span>" },
+  { cat: "Windows Commands", q: "What command shows detailed system info (hardware, OS)?", a: "msinfo32<span class='acr-full'>(Microsoft System Information)</span>" },
+  { cat: "Windows Commands", q: "What command opens Windows Firewall with Advanced Security?", a: "wf.msc<span class='acr-full'>(Windows Firewall - Microsoft Console)</span>" },
+  { cat: "Windows Commands", q: "What command manages disk partitions from the CLI?", a: "diskpart<span class='acr-full'>(Disk Partition)</span>" },
+  { cat: "Windows Commands", q: "What command rebuilds the Boot Configuration Data?", a: "bootrec /rebuildbcd<span class='acr-full'>(Boot Recovery / Boot Configuration Data)</span>" },
+  { cat: "Windows Commands", q: "What command fixes the Master Boot Record?", a: "bootrec /fixmbr<span class='acr-full'>(MBR = Master Boot Record)</span>" },
+  { cat: "Windows Commands", q: "What command shows the ARP cache (IP-to-MAC mappings)?", a: "arp -a<span class='acr-full'>(Address Resolution Protocol)</span>" },
+  { cat: "Windows Commands", q: "What command copies files/dirs with more options than copy?", a: "robocopy<span class='acr-full'>(Robust File Copy)</span>" },
+  { cat: "Windows Commands", q: "What command opens Task Manager from a prompt?", a: "taskmgr<span class='acr-full'>(Task Manager)</span>" },
+  { cat: "Windows Commands", q: "What command kills a process by name or PID?", a: "taskkill<span class='acr-full'>(PID = Process ID)</span>" },
+  { cat: "Windows Commands", q: "What command lists all running processes from the CLI?", a: "tasklist" },
+  { cat: "Windows Commands", q: "What command opens Computer Management console?", a: "compmgmt.msc<span class='acr-full'>(Computer Management - Microsoft Console)</span>" },
+
+  // ========== LINUX COMMANDS (25) ==========
+  { cat: "Linux Commands", q: "What Linux command lists files and directories?", a: "ls<span class='acr-full'>(List)</span>" },
+  { cat: "Linux Commands", q: "What flag shows hidden files with ls?", a: "-a (ls -a)<span class='acr-full'>(All)</span>" },
+  { cat: "Linux Commands", q: "What Linux command changes your current directory?", a: "cd<span class='acr-full'>(Change Directory)</span>" },
+  { cat: "Linux Commands", q: "What Linux command creates a new directory?", a: "mkdir<span class='acr-full'>(Make Directory)</span>" },
+  { cat: "Linux Commands", q: "What Linux command removes a file?", a: "rm<span class='acr-full'>(Remove)</span>" },
+  { cat: "Linux Commands", q: "What Linux command removes a directory and all its contents?", a: "rm -r<span class='acr-full'>(Remove Recursive)</span>" },
+  { cat: "Linux Commands", q: "What Linux command copies files?", a: "cp<span class='acr-full'>(Copy)</span>" },
+  { cat: "Linux Commands", q: "What Linux command moves or renames files?", a: "mv<span class='acr-full'>(Move)</span>" },
+  { cat: "Linux Commands", q: "What Linux command searches text for a matching pattern?", a: "grep<span class='acr-full'>(Global Regular Expression Print)</span>" },
+  { cat: "Linux Commands", q: "What Linux command changes file permissions?", a: "chmod<span class='acr-full'>(Change Mode)</span>" },
+  { cat: "Linux Commands", q: "What Linux command changes file ownership?", a: "chown<span class='acr-full'>(Change Owner)</span>" },
+  { cat: "Linux Commands", q: "What Linux command displays the contents of a file?", a: "cat<span class='acr-full'>(Concatenate)</span>" },
+  { cat: "Linux Commands", q: "What Linux command shows processes in real time?", a: "top<span class='acr-full'>(Table of Processes)</span>" },
+  { cat: "Linux Commands", q: "What Linux command shows a snapshot of running processes?", a: "ps<span class='acr-full'>(Process Status)</span>" },
+  { cat: "Linux Commands", q: "What Linux command shows disk space of mounted filesystems?", a: "df<span class='acr-full'>(Disk Free)</span>" },
+  { cat: "Linux Commands", q: "What Linux command installs packages on Debian/Ubuntu?", a: "apt-get install<span class='acr-full'>(Advanced Package Tool)</span>" },
+  { cat: "Linux Commands", q: "What Linux command runs something with root privileges?", a: "sudo<span class='acr-full'>(Superuser Do)</span>" },
+  { cat: "Linux Commands", q: "What Linux command shows network interface configuration?", a: "ifconfig (or ip addr)<span class='acr-full'>(Interface Configuration)</span>" },
+  { cat: "Linux Commands", q: "What Linux command finds files by name, size, or type?", a: "find" },
+  { cat: "Linux Commands", q: "What Linux command shows the last lines of a file?", a: "tail" },
+  { cat: "Linux Commands", q: "What Linux symbol pipes output from one command to another?", a: "| (pipe)" },
+  { cat: "Linux Commands", q: "What Linux command prints your current working directory?", a: "pwd<span class='acr-full'>(Print Working Directory)</span>" },
+  { cat: "Linux Commands", q: "What Linux command changes a user's password?", a: "passwd<span class='acr-full'>(Password)</span>" },
+  { cat: "Linux Commands", q: "What Linux command adds a new user account?", a: "useradd" },
+  { cat: "Linux Commands", q: "What Linux command displays or sets the system hostname?", a: "hostname" },
+
+  // ========== PORTS (14) ==========
+  { cat: "Ports", q: "What port does FTP use?", a: "21<span class='acr-full'>(File Transfer Protocol)</span>" },
+  { cat: "Ports", q: "What port does SSH use?", a: "22<span class='acr-full'>(Secure Shell)</span>" },
+  { cat: "Ports", q: "What port does Telnet use?", a: "23<span class='acr-full'>(Teletype Network)</span>" },
+  { cat: "Ports", q: "What port does SMTP use?", a: "25<span class='acr-full'>(Simple Mail Transfer Protocol)</span>" },
+  { cat: "Ports", q: "What port does DNS use?", a: "53<span class='acr-full'>(Domain Name System)</span>" },
+  { cat: "Ports", q: "What port does HTTP use?", a: "80<span class='acr-full'>(HyperText Transfer Protocol)</span>" },
+  { cat: "Ports", q: "What port does HTTPS use?", a: "443<span class='acr-full'>(HyperText Transfer Protocol Secure)</span>" },
+  { cat: "Ports", q: "What port does POP3 use?", a: "110<span class='acr-full'>(Post Office Protocol v3)</span>" },
+  { cat: "Ports", q: "What port does IMAP use?", a: "143<span class='acr-full'>(Internet Message Access Protocol)</span>" },
+  { cat: "Ports", q: "What port does RDP use?", a: "3389<span class='acr-full'>(Remote Desktop Protocol)</span>" },
+  { cat: "Ports", q: "What port does DHCP (server) use?", a: "67<span class='acr-full'>(Dynamic Host Configuration Protocol)</span>" },
+  { cat: "Ports", q: "What port does LDAP use?", a: "389<span class='acr-full'>(Lightweight Directory Access Protocol)</span>" },
+  { cat: "Ports", q: "What port does SMB/CIFS use?", a: "445<span class='acr-full'>(Server Message Block / Common Internet File System)</span>" },
+  { cat: "Ports", q: "What port does SNMP use?", a: "161<span class='acr-full'>(Simple Network Management Protocol)</span>" },
+
+  // ========== SECURITY (24) ==========
+  { cat: "Security", q: "Malware that attaches to files and needs user action to spread?", a: "Virus" },
+  { cat: "Security", q: "Malware that self-replicates across networks without user action?", a: "Worm" },
+  { cat: "Security", q: "Malware disguised as legitimate software?", a: "Trojan" },
+  { cat: "Security", q: "Malware that encrypts your files and demands payment?", a: "Ransomware" },
+  { cat: "Security", q: "Malware that records your keystrokes?", a: "Keylogger" },
+  { cat: "Security", q: "Malware that hides deep in the OS for persistent access?", a: "Rootkit" },
+  { cat: "Security", q: "Software that tracks browsing and shows unwanted ads?", a: "Spyware / Adware" },
+  { cat: "Security", q: "A mass untargeted fraudulent email attack?", a: "Phishing" },
+  { cat: "Security", q: "A phishing attack aimed at a specific person or org?", a: "Spear phishing" },
+  { cat: "Security", q: "A phishing attack targeting executives?", a: "Whaling" },
+  { cat: "Security", q: "Social engineering via phone calls?", a: "Vishing<span class='acr-full'>(Voice Phishing)</span>" },
+  { cat: "Security", q: "Social engineering via text messages?", a: "Smishing<span class='acr-full'>(SMS Phishing)</span>" },
+  { cat: "Security", q: "Following someone through a secure door without badging in?", a: "Tailgating" },
+  { cat: "Security", q: "Looking over someone's shoulder to steal info?", a: "Shoulder surfing" },
+  { cat: "Security", q: "Searching through trash for sensitive information?", a: "Dumpster diving" },
+  { cat: "Security", q: "What are the three MFA factors?", a: "Know, Have, Are<span class='acr-full'>(MFA = Multi-Factor Authentication)</span>" },
+  { cat: "Security", q: "Wireless protocol using AES/CCMP encryption — current enterprise standard", a: "WPA2<span class='acr-full'>(Wi-Fi Protected Access 2 / AES = Advanced Encryption Standard)</span>" },
+  { cat: "Security", q: "Wireless protocol using SAE — most secure, resistant to offline dictionary attacks", a: "WPA3<span class='acr-full'>(Wi-Fi Protected Access 3 / SAE = Simultaneous Authentication of Equals)</span>" },
+  { cat: "Security", q: "The weakest wireless protocol — easily cracked and should never be used", a: "WEP<span class='acr-full'>(Wired Equivalent Privacy)</span>" },
+  { cat: "Security", q: "What Windows feature provides full disk encryption?", a: "BitLocker" },
+  { cat: "Security", q: "Hardware chip that stores encryption keys for BitLocker and Secure Boot", a: "TPM<span class='acr-full'>(Trusted Platform Module)</span>" },
+  { cat: "Security", q: "Windows feature that prompts for permission before admin-level changes", a: "UAC<span class='acr-full'>(User Account Control)</span>" },
+  { cat: "Security", q: "When NTFS and Share permissions both apply, which wins?", a: "The most restrictive<span class='acr-full'>(NTFS = New Technology File System)</span>" },
+  { cat: "Security", q: "What principle gives users only the minimum access needed?", a: "Least privilege" },
+
+  // ========== OPERATING SYSTEMS (11) ==========
+  { cat: "Operating Systems", q: "Primary file system used by Windows — supports permissions, encryption, journaling", a: "NTFS<span class='acr-full'>(New Technology File System)</span>" },
+  { cat: "Operating Systems", q: "Primary file system used by modern macOS — optimized for SSDs", a: "APFS<span class='acr-full'>(Apple File System)</span>" },
+  { cat: "Operating Systems", q: "What is the most common Linux file system?", a: "ext4<span class='acr-full'>(Fourth Extended File System)</span>" },
+  { cat: "Operating Systems", q: "Which Windows edition supports domain join — Home or Pro?", a: "Pro" },
+  { cat: "Operating Systems", q: "Which Windows edition includes BitLocker — Home or Pro?", a: "Pro" },
+  { cat: "Operating Systems", q: "Which Windows edition has Group Policy Editor — Home or Pro?", a: "Pro" },
+  { cat: "Operating Systems", q: "Which Windows edition can host Remote Desktop — Home or Pro?", a: "Pro" },
+  { cat: "Operating Systems", q: "What type of install wipes everything and starts fresh?", a: "Clean install" },
+  { cat: "Operating Systems", q: "What type of install keeps files/settings while updating the OS?", a: "Upgrade (in-place)" },
+  { cat: "Operating Systems", q: "What type of install reinstalls Windows over itself to fix corruption?", a: "Repair install" },
+  { cat: "Operating Systems", q: "What are the 5 Registry root keys?", a: "HKLM, HKCU, HKU, HKCR, HKCC<span class='acr-full'>(Local Machine, Current User, Users, Classes Root, Current Config)</span>" },
+
+  // ========== TROUBLESHOOTING (12) ==========
+  { cat: "Troubleshooting", q: "CompTIA troubleshooting step 1?", a: "Identify the problem" },
+  { cat: "Troubleshooting", q: "CompTIA troubleshooting step 2?", a: "Establish a theory of probable cause" },
+  { cat: "Troubleshooting", q: "CompTIA troubleshooting step 3?", a: "Test the theory" },
+  { cat: "Troubleshooting", q: "CompTIA troubleshooting step 4?", a: "Establish a plan of action" },
+  { cat: "Troubleshooting", q: "CompTIA troubleshooting step 5?", a: "Verify full system functionality" },
+  { cat: "Troubleshooting", q: "CompTIA troubleshooting step 6?", a: "Document findings, actions, and outcomes" },
+  { cat: "Troubleshooting", q: "What Windows mode boots with minimal drivers and no network?", a: "Safe Mode" },
+  { cat: "Troubleshooting", q: "How do you access Windows Recovery Environment?", a: "Shift + Restart<span class='acr-full'>(WinRE — or auto after 2-3 failed boots)</span>" },
+  { cat: "Troubleshooting", q: "What tool shows a timeline of system failures and installs?", a: "Reliability Monitor" },
+  { cat: "Troubleshooting", q: "What tool shows detailed system/application/security logs?", a: "Event Viewer" },
+  { cat: "Troubleshooting", q: "What does Reset this PC (keep my files) do?", a: "Reinstalls Windows, removes apps, keeps personal files" },
+  { cat: "Troubleshooting", q: "What does System Restore do?", a: "Rolls back system files/settings to a restore point" },
+
+  // ========== OPERATIONAL PROCEDURES (23) ==========
+  { cat: "Operational Procedures", q: "What is the 3-2-1 backup rule?", a: "3 copies, 2 media types, 1 offsite" },
+  { cat: "Operational Procedures", q: "What backup type copies everything every time?", a: "Full backup" },
+  { cat: "Operational Procedures", q: "What backup copies only changes since the last backup of any type?", a: "Incremental" },
+  { cat: "Operational Procedures", q: "What backup copies only changes since the last full backup?", a: "Differential" },
+  { cat: "Operational Procedures", q: "Which backup is fastest to create but slowest to restore?", a: "Incremental" },
+  { cat: "Operational Procedures", q: "Incident response step 1?", a: "Preparation" },
+  { cat: "Operational Procedures", q: "Incident response step 2?", a: "Identification" },
+  { cat: "Operational Procedures", q: "Incident response step 3?", a: "Containment" },
+  { cat: "Operational Procedures", q: "Incident response step 4?", a: "Eradication" },
+  { cat: "Operational Procedures", q: "Incident response step 5?", a: "Recovery" },
+  { cat: "Operational Procedures", q: "Incident response step 6?", a: "Lessons learned" },
+  { cat: "Operational Procedures", q: "What documents who handled evidence and when?", a: "Chain of custody" },
+  { cat: "Operational Procedures", q: "Policy document defining what users can and cannot do on company systems", a: "AUP<span class='acr-full'>(Acceptable Use Policy)</span>" },
+  { cat: "Operational Procedures", q: "What file extension is a PowerShell script?", a: ".ps1" },
+  { cat: "Operational Procedures", q: "What file extension is a Windows batch script?", a: ".bat" },
+  { cat: "Operational Procedures", q: "What file extension is a Bash script?", a: ".sh" },
+  { cat: "Operational Procedures", q: "What file extension is a Python script?", a: ".py" },
+  { cat: "Operational Procedures", q: "What file extension is a VBScript?", a: ".vbs<span class='acr-full'>(Visual Basic Script)</span>" },
+  { cat: "Operational Procedures", q: "Personal data like SSN, date of birth, and address that can identify an individual", a: "PII<span class='acr-full'>(Personally Identifiable Information)</span>" },
+  { cat: "Operational Procedures", q: "US regulation protecting the privacy and security of patient health information", a: "HIPAA<span class='acr-full'>(Health Insurance Portability and Accountability Act)</span>" },
+  { cat: "Operational Procedures", q: "What standard governs credit card data security?", a: "PCI-DSS<span class='acr-full'>(Payment Card Industry Data Security Standard)</span>" },
+  { cat: "Operational Procedures", q: "What data destruction method uses magnetism?", a: "Degaussing" },
+  { cat: "Operational Procedures", q: "What is the ideal server room temperature range?", a: "64-75°F (18-24°C)" },
+];
+
+let deck = [...CARDS];
+let idx = 0;
+let flipped = false;
+let filter = "All";
+let scores = {};
+
+function getFiltered() {
+  if (filter === "All") return [...CARDS];
+  if (filter === "Missed") return CARDS.filter(c => scores[c.q] === "miss");
+  if (filter === "Shaky") return CARDS.filter(c => scores[c.q] === "shaky");
+  return CARDS.filter(c => c.cat === filter);
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function doShuffle() { deck = shuffle(getFiltered()); idx = 0; flipped = false; render(); }
+function setFilter(f) { filter = f; deck = getFiltered(); idx = 0; flipped = false; render(); }
+function flipCard() { flipped = !flipped; render(); }
+function prev() { if (idx > 0) { idx--; flipped = false; render(); } }
+function next() { if (idx < deck.length - 1) { idx++; flipped = false; render(); } }
+
+function score(level) {
+  if (deck.length === 0) return;
+  scores[deck[idx].q] = level;
+  if (idx < deck.length - 1) { idx++; flipped = false; }
+  render();
+}
+
+function getStats() {
+  let miss = 0, shaky = 0, got = 0, unseen = 0;
+  CARDS.forEach(c => {
+    const s = scores[c.q];
+    if (s === "miss") miss++; else if (s === "shaky") shaky++; else if (s === "got") got++; else unseen++;
+  });
+  return { miss, shaky, got, unseen };
+}
+
+const cats = ["All", ...new Set(CARDS.map(c => c.cat)), "Missed", "Shaky"];
+
+function render() {
+  const app = document.getElementById("app");
+  const stats = getStats();
+  const total = deck.length;
+  const progress = total > 0 ? ((idx + 1) / total * 100) : 0;
+  const card = deck[idx];
+
+  let catBtns = cats.map(c =>
+    `<button class="cat-btn ${filter === c ? 'active' : ''}" onclick="setFilter('${c}')">${c}${c === "Missed" ? ` (${stats.miss})` : c === "Shaky" ? ` (${stats.shaky})` : ''}</button>`
+  ).join('');
+
+  let cardHTML = '';
+  if (!card) {
+    cardHTML = `<div class="empty-state"><p>No cards in this category yet.</p><p>Study more and mark cards to see them here!</p></div>`;
+  } else {
+    cardHTML = `
+      <div class="card-container">
+        <div class="card ${flipped ? 'flipped' : ''}" onclick="flipCard()">
+          <div class="card-face card-front">
+            <div class="card-cat">${card.cat}</div>
+            <div class="card-question">${card.q}</div>
+            <div class="card-hint">tap to reveal</div>
+          </div>
+          <div class="card-face card-back">
+            <div class="card-cat">Answer</div>
+            <div class="card-answer">${card.a}</div>
+          </div>
+        </div>
+      </div>
+      <div class="conf-row">
+        <button class="conf-btn conf-miss" onclick="score('miss')">Missed</button>
+        <button class="conf-btn conf-shaky" onclick="score('shaky')">Shaky</button>
+        <button class="conf-btn conf-got" onclick="score('got')">Got it</button>
+      </div>`;
+  }
+
+  app.innerHTML = `
+    <h1>A+ Core 2 Flashcards</h1>
+    <div class="subtitle">220-1102 · ${CARDS.length} cards · one question, one answer</div>
+    <div class="cat-bar">${catBtns}</div>
+    ${total > 0 ? `
+    <div class="filter-mode">${filter !== "All" && filter !== "Missed" && filter !== "Shaky" ? filter + ' · ' : ''}${idx + 1} of ${total}</div>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+      <div class="progress-text">${Math.round(progress)}%</div>
+    </div>` : ''}
+    ${cardHTML}
+    ${card ? `
+    <div class="nav-row">
+      <button class="nav-btn" onclick="prev()" ${idx === 0 ? 'disabled' : ''}>← Prev</button>
+      <button class="shuffle-btn" onclick="doShuffle()">Shuffle</button>
+      <button class="nav-btn" onclick="next()" ${idx >= total - 1 ? 'disabled' : ''}>Next →</button>
+    </div>` : ''}
+    <div class="stats">
+      <div class="stat stat-miss"><div class="stat-num">${stats.miss}</div><div class="stat-label">Missed</div></div>
+      <div class="stat stat-shaky"><div class="stat-num">${stats.shaky}</div><div class="stat-label">Shaky</div></div>
+      <div class="stat stat-got"><div class="stat-num">${stats.got}</div><div class="stat-label">Got It</div></div>
+      <div class="stat stat-unseen"><div class="stat-num">${stats.unseen}</div><div class="stat-label">Unseen</div></div>
+    </div>`;
+}
+
+doShuffle();
+</script>
+</body>
+</html>
